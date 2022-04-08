@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ToDo</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            color: white;
+            font-family: "Calibri";
+        }
+        body {
+            display: flex;
+            flex-direction: column;
+            background: darkslateblue;
+        }
+        header {
+            padding: 1rem 1rem;
+            max-width: 600px;
+            width: 100%;
+            margin: 0 auto;
+        }
+        header h1 {
+            font-size: 2.5rem;
+            font-weight: 300;
+            margin-bottom: 1rem;
+        }
+        #new-task-form {
+            display: flex;
+        }
+        input, button {
+            appearance: none;
+            outline: none;
+            border: none;
+        }
+        #new-task-input {
+            flex: 1 1 0%;
+            padding: 1rem;
+            background-color: white;
+            border-radius: 2rem;
+            margin-right: 1rem;
+            color: black;
+            font-size: 1.25rem;
+        }
+        #new-task-input::placeholder {
+            color: grey;
+        }
+        #new-task-submit {
+            font-size: 1.25rem;
+            font-weight: 700;
+            background-color: blue;
+            border-radius: 2rem;
+            cursor: pointer;
+            -webkit-box-shadow: 5px 5px 10px 0px rgba(0,0,0,0.75);
+            -moz-box-shadow: 5px 5px 10px 0px rgba(0,0,0,0.75);
+            box-shadow: 5px 5px 10px 0px rgba(0,0,0,0.75);
+        }
+        #new-task-submit:hover {
+            opacity: 0.8;
+        }
+        #new-task-submit:active {
+            opacity: 0.4;
+        }
+        main {
+            flex: 1 1 0%;
+            max-width: 600px;
+            width: 100%;
+            margin: 0 auto;
+        }
+        .task-list {
+            padding: 1rem; 
+        }
+        #tasks .task {
+            display: flex;
+            justify-content: space-between;
+            background-color: slateblue;
+            padding: 1rem;
+            border-radius: 2rem;
+            margin-bottom: 1rem;
+        }
+        #tasks .task .content {
+            flex: 1 1 0%;
+        }
+        #tasks .task .content .text {
+            color: gray;
+            border-radius: 0.5rem;
+            font-size: 1.125rem;
+            width: 100%;
+            transition: 0.4s;
+        }
+        #tasks .task .content .text:not(:read-only) {
+            color:  black;
+        }
+        #tasks .task .actions {
+            display: flex;
+            margin: 0 -0.5rem;
+        }
+        .task .actions button {
+            cursor: pointer;
+            margin: 0 0.5rem;
+            font-size: 1.125rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            transition: 0.4s;
+        }
+        .task .actions button:hover {
+            opacity: 0.8;
+        }
+        .task .actions button:active {
+            opacity: 0.4;
+        }
+        .task .actions .edit {
+            background-color: aquamarine;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .task .actions .delete {
+            background-color: crimson;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+    </style>
+<head>
+<body>
+    <header>
+        <h1>ToDo List</h1>
+        <form id="new-task-form">
+            <input 
+                type="text" 
+                id="new-task-input"
+                placeholder="Input your task"/>
+            <input 
+                type="submit" 
+                id="new-task-submit"
+                value="Add"/>
+        </form>
+    </header>
+
+    <main>
+        <section class="task-list">
+             <div id="tasks">
+               <!-- <div class="task">
+                    <div class="content">
+                        <input
+                            type="text"
+                            class="text"
+                            value="My task"
+                            readonly
+                        />
+                    </div>
+                    <div class="actions">
+                        <button class="edit">Edit</button>
+                        <button class="delete">Delete</button>
+                    </div>
+                </div> -->
+            </div>
+        </section>
+    </main>
+
+    <script>
+        window.addEventListener('load', () => {
+            const form = document.querySelector("#new-task-form");
+            const input = document.querySelector("#new-task-input");
+            const list_el = document.querySelector("#tasks");
+            let todo_list = [];
+            getFromLocalStorage();
+            form.addEventListener("submit", (e) => {
+                e.preventDefault();
+                addTodo(input.value);
+            });
+            function addTodo(item) {
+                if(!item) {
+                    alert("Please, input the new task!");
+                    return;
+                }
+                const todo = {
+                    id: Date.now(),
+                    name: item
+                };
+                todo_list.push(todo);
+                addToLocalStorage('todos',todo_list);
+                input.value = "";
+            }
+            function addToLocalStorage(key, list) {
+                localStorage.setItem(key, JSON.stringify(list));
+                renderList(list);
+            }
+            function renderList(list) {
+                list_el.innerHTML = "";
+                list.forEach(element => {
+                    const task_el = document.createElement("div");
+                    task_el.classList.add("task");
+                    task_el.setAttribute('data-key', element.id);
+
+                    const task_content_el = document.createElement("div");
+                    task_content_el.classList.add("content");
+
+                    task_el.appendChild(task_content_el);
+
+                    const task_input_el = document.createElement("input");
+                    task_input_el.classList.add("text");
+                    task_input_el.type = "text";
+                    task_input_el.value = element.name; // set a task text
+                    task_input_el.setAttribute("readonly", "readonly");
+
+                    task_content_el.appendChild(task_input_el);
+
+                    const task_actions_el = document.createElement("div");
+                    task_actions_el.classList.add("actions");
+
+                    const task_edit_el = document.createElement("button");
+                    task_edit_el.classList.add("edit");
+                    task_edit_el.innerHTML = "Edit";
+
+                    const task_delete_el = document.createElement("button");
+                    task_delete_el.classList.add("delete");
+                    task_delete_el.innerHTML = "Delete";
+
+                    task_actions_el.appendChild(task_edit_el);
+                    task_actions_el.appendChild(task_delete_el);
+
+                    task_el.appendChild(task_actions_el);
+                    list_el.appendChild(task_el);
+
+                    task_edit_el.addEventListener("click", (e) => {
+                        if (task_edit_el.innerText.toLowerCase() === "edit") {
+                            task_input_el.removeAttribute("readonly");
+                            task_input_el.focus();
+                            task_edit_el.innerText = "Save";
+                        } else {
+                            task_input_el.setAttribute("readonly", "readonly");
+                            task_edit_el.innerText = "Edit";
+                            todo_list = todo_list.map(el => {
+                                if (el.id == task_el.getAttribute("data-key")) {
+                                    el.name = task_input_el.value;
+                                }
+                                return el;
+                            });
+                            addToLocalStorage("todos", todo_list);
+                            renderList(todo_list);
+                        }
+                        
+                    });
+            
+                    task_delete_el.addEventListener("click", () => {
+                        todo_list = todo_list.filter(el => 
+                            el.id != task_el.getAttribute("data-key"));
+                        addToLocalStorage("todos", todo_list);
+                        renderList(todo_list);
+                    });
+                });
+            }
+            function getFromLocalStorage() {
+                const reference = localStorage.getItem('todos');
+                if (reference) {
+                todo_list = JSON.parse(reference);
+                }
+                renderList(todo_list);
+            }
+        });
+    </script>
+</body>
+</html>
